@@ -8,7 +8,7 @@
 
 CXX ?= g++
 FLAGS +=  -Wall -Wextra -Wpedantic -std=c++1y 
-LIBS += 
+LIBS += -lboost_unit_test_framework 
 INCLUDES += 
 TARGET = build/test
 OBJECTS = build/logger.o build/main.o
