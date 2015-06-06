@@ -78,14 +78,14 @@ void log(level l, const std::vector<std::string>& args) {
 	const auto length = prefix.length();
 	get_stream() << prefix;
 	std::transform(args.begin(), args.end(), std::ostream_iterator<std::string>{get_stream()},
-	               [=](const std::string& str){return replace_newlines(str, length);});
+	               [length](const std::string& str){return replace_newlines(str, length);});
 	get_stream() << '\n' << std::flush;
 }
 
 void logf(level l, const std::string& format, std::vector<std::string> args) {
 	const auto prefix = make_prefix(l);
 	const auto length = prefix.length();
-	auto fmt = replace_newlines(format, length);
+	const auto fmt = replace_newlines(format, length);
 	std::transform(args.begin(), args.end(), args.begin(),
 	               [=](const std::string& str){return replace_newlines(str, length);});
 
