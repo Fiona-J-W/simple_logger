@@ -116,6 +116,7 @@ void logf(level l, const std::string& format, std::vector<std::string> args) {
 			default:
 				throw std::invalid_argument{"Invalid formatstring (unknown format-character)"};
 		}
+		it = std::next(pos);
 	}
 	mesg.push_back('\n');
 	get_stream() << mesg << std::flush;
