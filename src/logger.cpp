@@ -2,6 +2,7 @@
 #include "logger.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cstring>
 #include <ostream>
@@ -10,9 +11,7 @@
 namespace logger {
 
 logger_set::logger_set(std::initializer_list<log_target> lst): m_loggers{lst}, m_min_level{default_level} {
-	if (lst.size() == 0) {
-		return;
-	}
+	assert(lst.size() > 0);
 	m_min_level = std::min_element(lst.begin(), lst.end(),
 		[](const log_target& l, const log_target& r) {
 			return l.min_level < r.min_level;
