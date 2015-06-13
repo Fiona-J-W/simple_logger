@@ -7,7 +7,7 @@
 
 
 CXX ?= g++
-FLAGS +=  -Wall -Wextra -Wpedantic -std=c++1y 
+FLAGS +=  -Wall -Wextra -Wpedantic -std=c++1y -O0 -D_GLIBCXX_DEBUG -g 
 LIBS += -lboost_unit_test_framework 
 INCLUDES += 
 TARGET = build/test
@@ -35,7 +35,7 @@ all: $(TARGET)
 #Dependencies:
 
 
-build/logger.o: src/logger.cpp include/logger.hpp makefile
+build/logger.o: src/logger.cpp src/logger.hpp makefile
 
-build/main.o: test/main.cpp include/logger.hpp makefile
+build/main.o: test/main.cpp src/logger.hpp makefile
 
