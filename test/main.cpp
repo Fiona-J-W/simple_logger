@@ -110,7 +110,8 @@ BOOST_AUTO_TEST_CASE(call_std_log) {
 
 
 BOOST_AUTO_TEST_CASE(formatting_exceptions) {
-	auto logger = logger::logger_set{};
+	auto stream = std::ostringstream{};
+	auto logger = logger::logger_set{stream};
 	BOOST_CHECK_THROW(logger.notef("%"), std::invalid_argument);
 	BOOST_CHECK_THROW(logger.notef("%s"), std::invalid_argument);
 	BOOST_CHECK_THROW(logger.notef("%e"), std::invalid_argument);

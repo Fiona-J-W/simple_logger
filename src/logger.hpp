@@ -45,6 +45,7 @@ struct log_target {
 
 class logger_set {
 public:
+	logger_set() = delete;
 	logger_set(std::initializer_list<log_target> lst);
 
 	template<typename... Args>
