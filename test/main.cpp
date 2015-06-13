@@ -11,182 +11,97 @@
 
 BOOST_AUTO_TEST_SUITE( TestLogger )
 
+static inline bool head_and_tail_equal(const std::string& str, const std::string& head, const std::string& tail) {
+	return str.size() >= head.size() + tail.size()
+		and std::equal(head.begin(), head.end(), str.begin())
+		and std::equal(tail.rbegin(), tail.rend(), str.rbegin())
+		;
+}
+
 BOOST_AUTO_TEST_CASE(basic_log) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::log(logger::level::note, "foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[note ]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
+	auto stream = std::ostringstream{};
+	auto logger = logger::logger_set{stream};
+	logger.log(logger::level::note, "foo", " bar ", 23, ' ', 42.0, " baz");
+	BOOST_CHECK(head_and_tail_equal(stream.str(), "[note ][", "]: foo bar 23 42 baz\n"));
 }
-
-BOOST_AUTO_TEST_CASE(basic_debug) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::debug("foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[debug]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_warn) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::warn ("foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[warn ]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_note) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::note ("foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[note ]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_error ) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::error ("foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[error]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_fatal) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::fatal("foo", 'b', std::string{"ar"});
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[fatal]["};
-	const auto expected_tail = std::string{"]: foobar\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
 BOOST_AUTO_TEST_CASE(basic_logf) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::logf(logger::level::note, "Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[note ]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
+	auto stream = std::ostringstream{};
+	auto logger = logger::logger_set{stream};
+	logger.logf(logger::level::note, "bla%sblub%s%%", "foo", 42);
+	BOOST_CHECK(head_and_tail_equal(stream.str(), "[note ][", "]: blafooblub42%\n"));
 }
 
-BOOST_AUTO_TEST_CASE(basic_debugf) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::debugf("Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[debug]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
+BOOST_AUTO_TEST_CASE(concat_aliases) {
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::debug}};
+		logger.debug("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[debug][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::note}};
+		logger.note("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[note ][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::warn}};
+		logger.warn("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[warn ][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::error}};
+		logger.error("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[error][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::fatal}};
+		logger.fatal("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[fatal][", "]: foo\n"));
+	}
 }
-
-
-BOOST_AUTO_TEST_CASE(basic_notef) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::notef("Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[note ]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_warnf) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::warnf("Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[warn ]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_errorf) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::errorf("Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[error]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
-}
-
-BOOST_AUTO_TEST_CASE(basic_fatalf) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	logger::fatalf("Testing a %s with %%-characters and\nnewlines. And even"
-	             " more raw data: %s %s %s", "formatstring", 23, 42.0, 'x');
-	const auto result = stream.str();
-
-	const auto expected_head = std::string{"[fatal]["};
-	const auto expected_tail = std::string{"]: Testing a formatstring with %-characters and\n"
-		"                                   newlines. And even more raw data: 23 42 x\n"};
-
-	BOOST_CHECK(std::equal(expected_head.begin(), expected_head.end(), result.begin()));
-	BOOST_CHECK(std::equal(expected_tail.rbegin(), expected_tail.rend(), result.rbegin()));
+BOOST_AUTO_TEST_CASE(format_aliases) {
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::debug}};
+		logger.debugf("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[debug][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::note}};
+		logger.notef("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[note ][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::warn}};
+		logger.warnf("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[warn ][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::error}};
+		logger.errorf("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[error][", "]: foo\n"));
+	}
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{{stream, logger::level::fatal}};
+		logger.fatalf("foo");
+		BOOST_CHECK(head_and_tail_equal(stream.str(), "[fatal][", "]: foo\n"));
+	}
 }
 
 
 BOOST_AUTO_TEST_CASE(formatting_exceptions) {
-	std::ostringstream stream;
-	logger::set_stream(stream);
-	BOOST_CHECK_THROW(logger::notef("%"), std::invalid_argument);
-	BOOST_CHECK_THROW(logger::notef("%s"), std::invalid_argument);
-	BOOST_CHECK_THROW(logger::notef("%e"), std::invalid_argument);
+	auto logger = logger::logger_set{};
+	BOOST_CHECK_THROW(logger.notef("%"), std::invalid_argument);
+	BOOST_CHECK_THROW(logger.notef("%s"), std::invalid_argument);
+	BOOST_CHECK_THROW(logger.notef("%e"), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_SUITE_END();

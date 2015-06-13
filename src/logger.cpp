@@ -4,21 +4,35 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
-#include <iostream>
+#include <ostream>
 #include <iterator>
 
 namespace logger {
 
+logger_set::logger_set(std::initializer_list<log_target> lst): m_loggers{lst}, m_min_level{default_level} {
+	if (lst.size() == 0) {
+		return;
+	}
+	m_min_level = std::min_element(lst.begin(), lst.end(),
+		[](const log_target& l, const log_target& r) {
+			return l.min_level < r.min_level;
+		})->min_level;
+}
 
+void logger_set::log_impl(level l, const std::string& msg) {
+	for(auto& logger: m_loggers) {
+		if(l >= logger.min_level) {
+			*logger.stream << msg << std::flush;
+		}
+	}
+}
+
+
+logger_set& std_log() {
+	static auto log = logger_set{std::cout};
+	return log;
+}
 namespace {
-std::ostream*& ostream_pointer() {
-	static std::ostream* stream = &std::cout;
-	return stream;
-}
-
-std::ostream& get_stream() {
-	return *ostream_pointer();
-}
 
 std::string make_prefix(level l) {
 	auto prefix = std::string{};
@@ -50,10 +64,6 @@ std::string make_prefix(level l) {
 
 } // anonymous namespace
 
-void set_stream(std::ostream& stream) {
-	ostream_pointer() = &stream;
-}
-
 
 namespace impl {
 
@@ -73,29 +83,30 @@ std::string replace_newlines(const std::string& str, std::size_t length) {
 }
 
 
-void log(level l, const std::vector<std::string>& args) {
-	const auto prefix = make_prefix(l);
-	const auto length = prefix.length();
-	get_stream() << prefix;
-	std::transform(args.begin(), args.end(), std::ostream_iterator<std::string>{get_stream()},
-	               [length](const std::string& str){return replace_newlines(str, length);});
-	get_stream() << '\n' << std::flush;
+std::string concat_msg(level l, const std::vector<std::string>& args) {
+	auto msg = make_prefix(l);
+	const auto prefix_length = msg.length();
+	for(const auto& arg: args) {
+		msg += replace_newlines(arg, prefix_length);
+	}
+	msg += '\n';
+	return msg;
 }
 
-void logf(level l, const std::string& format, std::vector<std::string> args) {
+std::string format_msg(level l, const std::string& format, std::vector<std::string> args) {
 	const auto prefix = make_prefix(l);
 	const auto length = prefix.length();
 	const auto fmt = replace_newlines(format, length);
 	std::transform(args.begin(), args.end(), args.begin(),
 	               [=](const std::string& str){return replace_newlines(str, length);});
 
-	auto mesg = prefix;
+	auto msg = prefix;
 	auto arg_index = std::size_t{0};
 	auto it = fmt.begin();
 	const auto end = fmt.end();
 	while(it != end) {
 		auto pos = std::find(it, end, '%');
-		mesg.append(it, pos);
+		msg.append(it, pos);
 		if (pos == end) {
 			break;
 		}
@@ -105,21 +116,21 @@ void logf(level l, const std::string& format, std::vector<std::string> args) {
 		}
 		switch(*pos) {
 			case '%':
-				mesg.push_back('%');
+				msg.push_back('%');
 				break;
 			case 's':
 				if (arg_index >= args.size()) {
 					throw std::invalid_argument{"Invalid formatstring (not enough arguments)"};
 				}
-				mesg.append(args[arg_index++]);
+				msg.append(args[arg_index++]);
 				break;
 			default:
 				throw std::invalid_argument{"Invalid formatstring (unknown format-character)"};
 		}
 		it = std::next(pos);
 	}
-	mesg.push_back('\n');
-	get_stream() << mesg << std::flush;
+	msg.push_back('\n');
+	return msg;
 }
 
 } //  namespace impl
