@@ -19,7 +19,7 @@ namespace impl {
  * CAREFULL: THIS FUNCTION CONTAINS GLOBAL STATE!
  */
 std::vector<logger_set*>& logger_stack() {
-	static auto logger_stack = std::vector<logger_set*>{};
+	static auto stack = std::vector<logger_set*>{};
 	// To avoid infinite recursion, the base-logger must
 	// not auto-register but be added manually
 	static auto std_logger = logger_set{{std::cout}, auto_register::off};
@@ -27,28 +27,35 @@ std::vector<logger_set*>& logger_stack() {
 	// the stack, to avoid that it's destructor tries to access
 	// parts of the destroyed stack
 	
-	// It would probably be possible to do this faster,
-	// but all this code is already complex enough, so let's
-	// be on the safe side:
-	if (logger_stack.empty()) {
-		logger_stack.push_back(&std_logger);
-	}
-	return logger_stack;
+	static auto dummy = [&]{
+			stack.push_back(&std_logger);
+			return 0;
+		}();
+	(void) dummy;
+	return stack;
 }
 
 void reassign_stack_pointer(logger_set*& ptr) {
+	const auto old_ptr = ptr;
 	if (ptr) {
 		ptr->m_stackpointer = &ptr;
 	}
+	(void) old_ptr;
+	assert(ptr == old_ptr);
 }
 
 void register_logger(logger_set& set) {
 	auto& stack = logger_stack();
 	// we need to reassign everything if the vector reallocated:
-	const auto redirect_pointers = (stack.size() == stack.capacity());
+	const auto old_capacity = stack.capacity();
 	stack.push_back(&set);
-	std::for_each(redirect_pointers? stack.begin() : std::prev(stack.end()),
-			stack.end(), reassign_stack_pointer);
+	if (stack.capacity() == old_capacity) {
+		reassign_stack_pointer(stack.back());
+	} else {
+		for(auto& ptr: stack) {
+			reassign_stack_pointer(ptr);
+		}
+	}
 }
 
 /**
@@ -56,13 +63,14 @@ void register_logger(logger_set& set) {
  */
 void pop_loggers() {
 	auto& stack = logger_stack();
-	stack.erase(std::find_if_not(stack.rbegin(), stack.rend(),
-			[](logger_set* ptr)->bool {return ptr;}
-		).base(), stack.end());
+	while(!stack.empty() and stack.back() == nullptr) {
+		stack.pop_back();
+	}
+	assert(stack.empty() or stack.back() != nullptr);
 }
 
 logger_set& active_logger() {
-	auto result = logger_stack().back();
+	const auto result = logger_stack().back();
 	assert(result != nullptr);
 	return *result;
 }
