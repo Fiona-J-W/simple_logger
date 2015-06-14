@@ -96,19 +96,6 @@ BOOST_AUTO_TEST_CASE(format_aliases) {
 	}
 }
 
-#if 0
-// This doesn't really test anything, it just makes sure that
-// logger::std_log() is called during testing, to prevent really
-// stupid things like it being accidentially deleted...
-//
-// Also: I was told that every functions should be called at least
-// once during testing ;-)
-BOOST_AUTO_TEST_CASE(call_std_log) {
-	auto& log = logger::std_log();
-	BOOST_CHECK(typeid(log) == typeid(logger::logger_set));
-}
-#endif
-
 
 BOOST_AUTO_TEST_CASE(formatting_exceptions) {
 	auto stream = std::ostringstream{};
