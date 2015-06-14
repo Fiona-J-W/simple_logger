@@ -27,6 +27,9 @@ std::vector<logger_set*>& logger_stack() {
 	// the stack, to avoid that it's destructor tries to access
 	// parts of the destroyed stack
 	
+	// It would probably be possible to do this faster,
+	// but all this code is already complex enough, so let's
+	// be on the safe side:
 	if (logger_stack.empty()) {
 		logger_stack.push_back(&std_logger);
 	}

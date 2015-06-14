@@ -7,8 +7,8 @@ This library is developed for inclusion into [CAcerts Cassiopeia](https://github
 and therefore attempts to have very simple code implementing only things that are really needed, so
 that it can easily be reviewed.
 
-**If you want advanced features, highly optimized code, or similar things, changes are
-that another library would serve you better!**
+**If you want advanced features, highly optimized code or the ability to log from more than
+one thread, changes are that another library would serve you better!**
 
 
 Status
