@@ -19,10 +19,17 @@ namespace impl {
  * CAREFULL: THIS FUNCTION CONTAINS GLOBAL STATE!
  */
 std::vector<logger_set*>& logger_stack() {
+	static auto logger_stack = std::vector<logger_set*>{};
 	// To avoid infinite recursion, the base-logger must
 	// not auto-register but be added manually
 	static auto std_logger = logger_set{{std::cout}, auto_register::off};
-	static auto logger_stack = std::vector<logger_set*>{&std_logger};
+	// in order to avoid use-after-free bugs, the logger must be created after
+	// the stack, to avoid that it's destructor tries to access
+	// parts of the destroyed stack
+	
+	if (logger_stack.empty()) {
+		logger_stack.push_back(&std_logger);
+	}
 	return logger_stack;
 }
 
