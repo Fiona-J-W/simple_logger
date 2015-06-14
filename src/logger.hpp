@@ -43,10 +43,23 @@ struct log_target {
 	level min_level;
 };
 
+class logger_set;
+namespace impl{
+	void reassign_stack_pointer(logger_set*& ptr);
+}
+
+/**
+ * Provides controll over wether a logger should automatically register itself
+ */
+enum class auto_register {on, off};
+
 class logger_set {
 public:
-	logger_set() = delete;
-	logger_set(std::initializer_list<log_target> lst);
+	logger_set(std::initializer_list<log_target> lst, auto_register = auto_register::on);
+
+	logger_set(logger_set&&) noexcept;
+	logger_set& operator=(logger_set&&) noexcept;
+	~logger_set();
 
 	template<typename... Args>
 	void log(level l, Args&&... args);
@@ -77,14 +90,17 @@ public:
 	void fatal(Args&&... args);
 	template<typename... Args>
 	void fatalf(const std::string& format, Args&&... args);
+
+	friend void impl::reassign_stack_pointer(logger_set*& ptr);
 private:
 	void log_impl(level l, const std::string& msg);
+
+
 	std::vector<log_target> m_loggers;
+	logger_set** m_stackpointer = nullptr;
 	level m_min_level;
 };
 
-
-logger_set& std_log();
 
 namespace impl {
 	std::string concat_msg(level l, const std::vector<std::string>& args);

@@ -1,6 +1,7 @@
 
 #include "logger.hpp"
 
+#include <iterator>
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -10,12 +11,93 @@
 
 namespace logger {
 
-logger_set::logger_set(std::initializer_list<log_target> lst): m_loggers{lst}, m_min_level{default_level} {
-	assert(lst.size() > 0);
-	m_min_level = std::min_element(lst.begin(), lst.end(),
-		[](const log_target& l, const log_target& r) {
-			return l.min_level < r.min_level;
-		})->min_level;
+namespace impl {
+
+/**
+ * Manages the standard-logger and the logger-stack.
+ *
+ * CAREFULL: THIS FUNCTION CONTAINS GLOBAL STATE!
+ */
+std::vector<logger_set*>& logger_stack() {
+	// To avoid infinite recursion, the base-logger must
+	// not auto-register but be added manually
+	static auto std_logger = logger_set{{std::cout}, auto_register::off};
+	static auto logger_stack = std::vector<logger_set*>{&std_logger};
+	return logger_stack;
+}
+
+void reassign_stack_pointer(logger_set*& ptr) {
+	if (ptr) {
+		ptr->m_stackpointer = &ptr;
+	}
+}
+
+void register_logger(logger_set& set) {
+	auto& stack = logger_stack();
+	// we need to reassign everything if the vector reallocated:
+	const auto redirect_pointers = (stack.size() == stack.capacity());
+	stack.push_back(&set);
+	std::for_each(redirect_pointers? stack.begin() : std::prev(stack.end()),
+			stack.end(), reassign_stack_pointer);
+}
+
+/**
+ * Pops loggers from the stack until the last one is not a nullptr
+ */
+void pop_loggers() {
+	auto& stack = logger_stack();
+	stack.erase(std::find_if_not(stack.rbegin(), stack.rend(),
+			[](logger_set* ptr)->bool {return ptr;}
+		).base(), stack.end());
+}
+
+} // namespace impl
+
+logger_set::logger_set(std::initializer_list<log_target> lst, auto_register r):
+		m_loggers{lst}, m_min_level{default_level} {
+	if (lst.size() > 0) {
+		m_min_level = std::min_element(lst.begin(), lst.end(),
+			[](const log_target& l, const log_target& r) {
+				return l.min_level < r.min_level;
+			})->min_level;
+	}
+	if (r == auto_register::on) {
+		impl::register_logger(*this);
+	}
+}
+
+logger_set::~logger_set() {
+	if (m_stackpointer) {
+		*m_stackpointer = nullptr;
+		impl::pop_loggers();
+	}
+}
+
+logger_set::logger_set(logger_set&& other) noexcept:
+		m_loggers{std::move(other.m_loggers)},
+		m_stackpointer{other.m_stackpointer},
+		m_min_level{other.m_min_level}
+{
+	other.m_stackpointer = nullptr;
+	if (m_stackpointer) {
+		*m_stackpointer = this;
+	}
+}
+
+
+logger_set& logger_set::operator=(logger_set&& other) noexcept {
+	if (m_stackpointer) {
+		*m_stackpointer = nullptr;
+		impl::pop_loggers();
+	}
+	m_loggers = std::move(other.m_loggers);
+	m_stackpointer = other.m_stackpointer;
+	m_min_level = other.m_min_level;
+	other.m_stackpointer = nullptr;
+	if (m_stackpointer) {
+		*m_stackpointer = this;
+	}
+	return *this;
 }
 
 void logger_set::log_impl(level l, const std::string& msg) {
@@ -26,11 +108,6 @@ void logger_set::log_impl(level l, const std::string& msg) {
 	}
 }
 
-
-logger_set& std_log() {
-	static auto log = logger_set{std::cout};
-	return log;
-}
 namespace {
 
 std::string make_prefix(level l) {
@@ -65,6 +142,7 @@ std::string make_prefix(level l) {
 
 
 namespace impl {
+
 
 std::string replace_newlines(const std::string& str, std::size_t length) {
 	auto returnstring = std::string{};
