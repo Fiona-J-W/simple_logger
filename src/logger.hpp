@@ -95,7 +95,6 @@ public:
 private:
 	void log_impl(level l, const std::string& msg);
 
-
 	std::vector<log_target> m_loggers;
 	logger_set** m_stackpointer = nullptr;
 	level m_min_level;
@@ -105,8 +104,8 @@ private:
 namespace impl {
 	std::string concat_msg(level l, const std::vector<std::string>& args);
 	std::string format_msg(level l, const std::string&, std::vector<std::string> args);
+	logger_set& active_logger();
 }
-
 template <typename... Args>
 void logger_set::log(level l, Args&&... data) {
 	if (l < m_min_level) {
@@ -123,6 +122,16 @@ void logger_set::logf(level l, const std::string& format, Args&&... data) {
 	log_impl(l, impl::format_msg(l, format, {conv::to_string(std::forward<Args>(data))...}));
 }
 
+template <typename... Args>
+void log(level l, Args&&... args) {
+	impl::active_logger().log(l, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void logf(level l, const std::string& format, Args&&... args) {
+	impl::active_logger().logf(l, format, std::forward<Args>(args)...);
+}
+
+// concat-based methods
 template <typename... Args>
 void logger_set::debug(Args&&... args) {
 	log(level::debug, std::forward<Args>(args)...);
@@ -144,6 +153,7 @@ void logger_set::fatal(Args&&... args) {
 	log(level::fatal, std::forward<Args>(args)...);
 }
 
+// format-based methods
 template <typename... Args>
 void logger_set::debugf(const std::string& fmt, Args&&... args) {
 	logf(level::debug, fmt, std::forward<Args>(args)...);
@@ -164,4 +174,49 @@ template <typename... Args>
 void logger_set::fatalf(const std::string& fmt, Args&&... args) {
 	logf(level::fatal, fmt, std::forward<Args>(args)...);
 }
+
+// global concat-based
+template <typename... Args>
+void debug(Args&&... args) {
+	log(level::debug, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void note(Args&&... args) {
+	log(level::note, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void warn(Args&&... args) {
+	log(level::warn, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void error(Args&&... args) {
+	log(level::error, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void fatal(Args&&... args) {
+	log(level::fatal, std::forward<Args>(args)...);
+}
+
+// global format-based
+template <typename... Args>
+void debugf(const std::string& fmt, Args&&... args) {
+	logf(level::debug, fmt, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void notef(const std::string& fmt, Args&&... args) {
+	logf(level::note, fmt, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void warnf(const std::string& fmt, Args&&... args) {
+	logf(level::warn, fmt, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void errorf(const std::string& fmt, Args&&... args) {
+	logf(level::error, fmt, std::forward<Args>(args)...);
+}
+template <typename... Args>
+void fatalf(const std::string& fmt, Args&&... args) {
+	logf(level::fatal, fmt, std::forward<Args>(args)...);
+}
+
 }

@@ -1,9 +1,9 @@
 
 #include "logger.hpp"
 
+#include <cassert>
 #include <iterator>
 #include <algorithm>
-#include <cassert>
 #include <chrono>
 #include <cstring>
 #include <ostream>
@@ -59,6 +59,12 @@ void pop_loggers() {
 	stack.erase(std::find_if_not(stack.rbegin(), stack.rend(),
 			[](logger_set* ptr)->bool {return ptr;}
 		).base(), stack.end());
+}
+
+logger_set& active_logger() {
+	auto result = logger_stack().back();
+	assert(result != nullptr);
+	return *result;
 }
 
 } // namespace impl
