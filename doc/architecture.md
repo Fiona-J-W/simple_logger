@@ -126,7 +126,10 @@ namespace logger { namespace conv {
 
 template<typename T1, typename T2>
 std::string to_string(const std::pair<T1, T2>& p) {
-	return '(' + to_string(p.first) + ", " + to_string(p.second) + ')';
+	// be explicit about the namespaces to prevent problems
+	// with ADL
+	return '(' + logger::conv::to_string(p.first)  + ", "
+	           + logger::conv::to_string(p.second) + ')';
 }
 
 }} //namespaces
