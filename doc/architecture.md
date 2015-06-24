@@ -87,4 +87,7 @@ though it should be noted that that kind of behavior is strongly discouraged
 and bad coding-style to begin with. You have been warned! (Note that similar
 things even apply to `std::cout`!)
 
+In order to log to the global logger, just use the global logging functions
+`logger::log` and `logger::logf` or their aliases with bound level `logger::warn`,
+`logger::warnf`,`logger::note`, and so on.
 
