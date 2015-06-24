@@ -91,3 +91,47 @@ In order to log to the global logger, just use the global logging functions
 `logger::log` and `logger::logf` or their aliases with bound level `logger::warn`,
 `logger::warnf`,`logger::note`, and so on.
 
+Printable Types
+---------------
+
+The library uses a set of unary functions named `to_string` in the namespace
+`logger::conv` that return a `std::string` to convert arbitrary types to
+strings. By default functions for the following specific types are provided:
+
+* `const std::string&`
+* `std::string&&`
+* `const char*`
+
+In addition to those there is a catch-all template that recieves a
+`const T&` and uses a stringstream to convert them. The stringstream in question
+is unique to each call, meaning that it is in a clean state with default-formats
+for everything.
+
+In order to make any type printable, the easiest methods are to either provide
+a normal output-operator (`<<`) or to add an unambigously better matching function
+to the overload set. The later should be documented somewhere and might benefit
+from being done directly in the logger-header if this seems reasonable.
+
+In order to provide a better match than the generic `const T&` it is necessary
+to add an overload that takes the exact type but isn't a template, or, in
+case of class-templates, takes a more specialized template (aka the template as
+arguments with it's arguments being the arguments to the function-template).
+
+For better comprehension of the later see this example for how a `std::pair`
+could be made loggable:
+
+```cpp
+
+namespace logger { namespace conv {
+
+template<typename T1, typename T2>
+std::string to_string(const std::pair<T1, T2>& p) {
+	return '(' + to_string(p.first) + ", " + to_string(p.second) + ')';
+}
+
+}} //namespaces
+```
+
+Don't forget that non-template functions that are defined in headers **must** be
+annotated as `inline`, since they are defined *inline*.
+
