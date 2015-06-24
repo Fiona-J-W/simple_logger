@@ -68,7 +68,7 @@ of all (not explicitly not registered) logger-sets. All of those logger-sets
 (or rather: pointers to them) are saved in that stack, as well as a back pointer
 to that pointer in the logger-set itself.
 
-![](architecture.svg)
+![](architecture_sketch.png)
 
 The destructor of each logger-set will see whether it contains such a pointer and
 will clear the pointer in the global stack by setting it to null and after that
