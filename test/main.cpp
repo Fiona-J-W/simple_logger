@@ -220,23 +220,25 @@ BOOST_AUTO_TEST_CASE(closed_filestream_exception) {
 }
 
 BOOST_AUTO_TEST_CASE(formated_strings) {
-	using logger::format::formated_string;
+	using namespace logger::format::literals;
 	using logger::conv::to_string;
-	BOOST_CHECK_EQUAL(to_string(formated_string{""}), "");
-	BOOST_CHECK_EQUAL(to_string(formated_string{"foo"}), "foo");
-	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5}), "  foo");
-	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5, 'x'}), "xxfoo");
-	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5, 'x', logger::format::alignment::left}), "fooxx");
+	BOOST_CHECK_EQUAL(to_string(""_fmt("foo")), "foo");
+	BOOST_CHECK_EQUAL(to_string("x3"_fmt("foo")), "foo");
+	BOOST_CHECK_EQUAL(to_string("x6"_fmt("foo")), "fooxxx");
+	BOOST_CHECK_EQUAL(to_string("x10l"_fmt("foo")), "fooxxxxxxx");
+	BOOST_CHECK_EQUAL(to_string("x10r"_fmt("foo")), "xxxxxxxfoo");
 }
 
 BOOST_AUTO_TEST_CASE(formated_ints) {
-	using logger::format::formated_integer;
+	using namespace logger::format::literals;
 	using logger::conv::to_string;
-	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3}), "3");
-	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3, 3}), "  3");
-	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3, 3, '0'}), "003");
-	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{13, 3, '0', logger::format::base::hex}), "00d");
-	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{1234, 2}), "1234");
+	BOOST_CHECK_EQUAL(to_string(""_fmt(3)), "3");
+	BOOST_CHECK_EQUAL(to_string("03"_fmt(3)), "003");
+	BOOST_CHECK_EQUAL(to_string("03"_fmt(13)), "013");
+	BOOST_CHECK_EQUAL(to_string("03x"_fmt(13)), "00d");
+	BOOST_CHECK_EQUAL(to_string("03o"_fmt(13)), "015");
+	BOOST_CHECK_EQUAL(to_string("03d"_fmt(13)), "013");
+	BOOST_CHECK_EQUAL(to_string("03s"_fmt(13)), "013");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

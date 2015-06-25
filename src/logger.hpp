@@ -14,31 +14,46 @@ const auto default_level = level::note;
 
 namespace format {
 
-enum class base {dec, hex};
+template<typename Integer>
+struct formated_integer;
+struct formated_string;
+
+struct format_data {
+	unsigned width = 0;
+	std::uint8_t base = 10;
+	char fill = ' ';
+	bool align_right = false;
+
+	formated_string operator()(const std::string& str) const;
+	template<typename Integer, typename = typename std::enable_if<std::is_integral<Integer>::value>::type>
+	formated_integer<Integer> operator()(Integer i) const;
+};
 
 template<typename Integer>
-struct formated_integer {
-	formated_integer(Integer value, std::size_t width = 0, char fill = ' ', base base = base::dec):
-		value{value}, width{width}, fill{fill}, base{base} {}
+struct formated_integer: public format_data {
+	formated_integer(Integer i, format_data f):
+		format_data(f), value{i} {}
 	Integer value;
-	std::size_t width = 0;
-	char fill = ' ';
-	base base = base::dec;
 };
 
-enum class alignment {left, right};
-
-
-struct formated_string {
-	formated_string(const std::string& value, std::size_t width=0,
-	                char fill = ' ', alignment align = alignment::right):
-		value{value}, width{width}, fill{fill}, align{align} {}
-
+struct formated_string: public format_data {
+	formated_string(const std::string& s, format_data f):
+		format_data(f), value{std::move(s)} {}
 	const std::string& value;
-	std::size_t width = 0;
-	char fill = ' ';
-	alignment align = alignment::right;
 };
+
+inline formated_string format_data::operator()(const std::string& str) const {
+	return {str, *this};
+}
+
+template<typename Integer, typename>
+inline formated_integer<Integer> format_data::operator()(Integer i) const {
+	return {i, *this};
+}
+
+inline namespace literals {
+format_data operator""_fmt(const char*, std::size_t);
+}
 
 } // namespace format
 
@@ -62,10 +77,7 @@ inline std::string to_string(const char* arg) { return arg; }
 template<typename Integer>
 inline std::string to_string(const format::formated_integer<Integer>& arg) {
 	std::ostringstream stream;
-	if(arg.base == format::base::hex) {
-		stream << std::hex;
-	}
-	stream << std::setw(arg.width) << std::setfill(arg.fill) << arg.value;
+	stream << std::setbase(arg.base) << std::setw(arg.width) << std::setfill(arg.fill) << arg.value;
 	return stream.str();
 }
 
@@ -75,12 +87,12 @@ inline std::string to_string(const format::formated_string& arg) {
 	}
 	auto str = std::string{};
 	str.reserve(arg.width);
-	if (arg.align == format::alignment::left) {
-		str.append(arg.value);
+	if (arg.align_right) {
 		str.append(arg.width - arg.value.size(), arg.fill);
+		str.append(arg.value);
 	} else {
-		str.append(arg.width - arg.value.size(), arg.fill);
 		str.append(arg.value);
+		str.append(arg.width - arg.value.size(), arg.fill);
 	}
 	return str;
 }

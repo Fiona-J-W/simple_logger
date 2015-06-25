@@ -77,6 +77,65 @@ logger_set& active_logger() {
 
 } // namespace impl
 
+namespace format {
+
+inline namespace literals {
+
+format_data operator""_fmt(const char* it, std::size_t len) {
+	const auto end = it + len;
+	auto retval = format_data{};
+	if (it == end) {
+		return retval;
+	}
+	if (*it == '0' or !std::isdigit(*it)) {
+		retval.fill = *it;
+		++it;
+	}
+	if (it == end) {
+		return retval;
+	}
+	if (std::isdigit(*it)) {
+		const auto w_end = std::find_if_not(it, end,
+				[](char c){return std::isdigit(c);});
+		retval.width = std::stoul(std::string{it, w_end});
+		it = w_end;
+	}
+	if (it == end) {
+		return retval;
+	}
+	switch(*it) {
+		case 's':
+			break;
+		case 'd':
+			retval.base = 10;
+			break;
+		case 'x':
+			retval.base = 16;
+			break;
+		case 'o':
+			retval.base = 8;
+			break;
+		case 'l':
+			retval.align_right = false;
+			break;
+		case 'r':
+			retval.align_right = true;
+			break;
+		default:
+			throw std::invalid_argument{"invalid format_data-string"};
+	}
+	++it;
+	if (it != end) {
+		throw std::invalid_argument{"invalid format_data-string"};
+	}
+
+	return retval;
+}
+
+}
+
+} // namespace format
+
 logger_set::logger_set(std::initializer_list<log_target> lst, auto_register r):
 		m_loggers{lst}, m_min_level{default_level} {
 	if (lst.size() > 0) {
