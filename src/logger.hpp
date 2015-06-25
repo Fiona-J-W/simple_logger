@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -10,6 +11,36 @@ namespace logger {
 enum class level { debug, note, warn, error, fatal };
 
 const auto default_level = level::note;
+
+namespace format {
+
+enum class base {dec, hex};
+
+template<typename Integer>
+struct formated_integer {
+	formated_integer(Integer value, std::size_t width = 0, char fill = ' ', base base = base::dec):
+		value{value}, width{width}, fill{fill}, base{base} {}
+	Integer value;
+	std::size_t width = 0;
+	char fill = ' ';
+	base base = base::dec;
+};
+
+enum class alignment {left, right};
+
+
+struct formated_string {
+	formated_string(const std::string& value, std::size_t width=0,
+	                char fill = ' ', alignment align = alignment::right):
+		value{value}, width{width}, fill{fill}, align{align} {}
+
+	const std::string& value;
+	std::size_t width = 0;
+	char fill = ' ';
+	alignment align = alignment::right;
+};
+
+} // namespace format
 
 /**
  * conv::to_string will be used to convert whatever argument is send
@@ -27,7 +58,34 @@ inline std::string to_string(const T& arg) {
 inline std::string to_string(std::string&& arg) { return arg; }
 inline std::string to_string(const std::string& arg) { return arg; }
 inline std::string to_string(const char* arg) { return arg; }
+
+template<typename Integer>
+inline std::string to_string(const format::formated_integer<Integer>& arg) {
+	std::ostringstream stream;
+	if(arg.base == format::base::hex) {
+		stream << std::hex;
+	}
+	stream << std::setw(arg.width) << std::setfill(arg.fill) << arg.value;
+	return stream.str();
 }
+
+inline std::string to_string(const format::formated_string& arg) {
+	if (arg.value.size() >= arg.width) {
+		return arg.value;
+	}
+	auto str = std::string{};
+	str.reserve(arg.width);
+	if (arg.align == format::alignment::left) {
+		str.append(arg.value);
+		str.append(arg.width - arg.value.size(), arg.fill);
+	} else {
+		str.append(arg.width - arg.value.size(), arg.fill);
+		str.append(arg.value);
+	}
+	return str;
+}
+
+} // namespace conv
 
 
 struct log_target {

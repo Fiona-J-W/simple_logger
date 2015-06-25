@@ -219,6 +219,25 @@ BOOST_AUTO_TEST_CASE(closed_filestream_exception) {
 	BOOST_CHECK_THROW(logger::logger_set{stream}, std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(formated_strings) {
+	using logger::format::formated_string;
+	using logger::conv::to_string;
+	BOOST_CHECK_EQUAL(to_string(formated_string{""}), "");
+	BOOST_CHECK_EQUAL(to_string(formated_string{"foo"}), "foo");
+	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5}), "  foo");
+	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5, 'x'}), "xxfoo");
+	BOOST_CHECK_EQUAL(to_string(formated_string{"foo", 5, 'x', logger::format::alignment::left}), "fooxx");
+}
+
+BOOST_AUTO_TEST_CASE(formated_ints) {
+	using logger::format::formated_integer;
+	using logger::conv::to_string;
+	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3}), "3");
+	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3, 3}), "  3");
+	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{3, 3, '0'}), "003");
+	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{13, 3, '0', logger::format::base::hex}), "00d");
+	BOOST_CHECK_EQUAL(to_string(formated_integer<int>{1234, 2}), "1234");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
