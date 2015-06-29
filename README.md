@@ -10,6 +10,9 @@ that it can easily be reviewed.
 **If you want advanced features, highly optimized code or the ability to log from more than
 one thread, changes are that another library would serve you better!**
 
+However, even for cacert, the usually demanded software is “simple plus just those two features”, so
+not all hope is lost. ;-)
+
 
 Status
 ------
