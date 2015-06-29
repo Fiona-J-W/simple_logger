@@ -214,6 +214,25 @@ BOOST_AUTO_TEST_CASE(formatting_exceptions) {
 }
 
 
+BOOST_AUTO_TEST_CASE(multiple_calls) {
+	auto stream = std::ostringstream{};
+	auto logger = logger::logger_set{stream};
+	logger::note("foo1");
+	logger::debug("foo2");
+	logger::warn("foo3");
+	logger::note("foo4");
+	const auto result = stream.str();
+	const auto foo1 = result.find("foo1");
+	const auto foo2 = result.find("foo2");
+	const auto foo3 = result.find("foo3");
+	const auto foo4 = result.find("foo4");
+	BOOST_CHECK_LT(foo1, foo3);
+	BOOST_CHECK_LT(foo3, foo4);
+	BOOST_CHECK_NE(foo4, std::string::npos);
+	BOOST_CHECK_EQUAL(foo2, std::string::npos);
+}
+
+
 BOOST_AUTO_TEST_CASE(closed_filestream_exception) {
 	std::ofstream stream;
 	BOOST_CHECK_THROW(logger::logger_set{stream}, std::runtime_error);
