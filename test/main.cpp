@@ -260,10 +260,10 @@ BOOST_AUTO_TEST_CASE(formated_strings) {
 	using namespace logger::format::literals;
 	using logger::conv::to_string;
 	BOOST_CHECK_EQUAL(to_string(""_fmt("foo")), "foo");
-	BOOST_CHECK_EQUAL(to_string("x3"_fmt("foo")), "foo");
-	BOOST_CHECK_EQUAL(to_string("x6"_fmt("foo")), "fooxxx");
-	BOOST_CHECK_EQUAL(to_string("x10l"_fmt("foo")), "fooxxxxxxx");
-	BOOST_CHECK_EQUAL(to_string("x10r"_fmt("foo")), "xxxxxxxfoo");
+	BOOST_CHECK_EQUAL(to_string("_3"_fmt("foo")), "foo");
+	BOOST_CHECK_EQUAL(to_string("_6"_fmt("foo")), "foo___");
+	BOOST_CHECK_EQUAL(to_string("_10l"_fmt("foo")), "foo_______");
+	BOOST_CHECK_EQUAL(to_string("_10r"_fmt("foo")), "_______foo");
 }
 
 BOOST_AUTO_TEST_CASE(formated_ints) {

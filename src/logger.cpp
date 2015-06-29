@@ -87,7 +87,7 @@ format_data operator""_fmt(const char* it, std::size_t len) {
 	if (it == end) {
 		return retval;
 	}
-	if (*it == '0' or !std::isdigit(*it)) {
+	if (*it == '0' or !std::isalnum(*it)) {
 		retval.fill = *it;
 		++it;
 	}
