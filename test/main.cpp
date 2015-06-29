@@ -231,6 +231,24 @@ BOOST_AUTO_TEST_CASE(multiple_calls) {
 	BOOST_CHECK_NE(foo4, std::string::npos);
 	BOOST_CHECK_EQUAL(foo2, std::string::npos);
 }
+BOOST_AUTO_TEST_CASE(multiple_calls_nested) {
+	auto stream = std::ostringstream{};
+	auto logger = logger::logger_set{stream};
+	logger::note("foo1");
+	{
+		auto stream = std::ostringstream{};
+		auto logger = logger::logger_set{stream};
+		logger::note("foo2");
+	}
+	logger::note("foo3");
+	const auto result = stream.str();
+	const auto foo1 = result.find("foo1");
+	const auto foo2 = result.find("foo2");
+	const auto foo3 = result.find("foo3");
+	BOOST_CHECK_LT(foo1, foo3);
+	BOOST_CHECK_NE(foo3, std::string::npos);
+	BOOST_CHECK_EQUAL(foo2, std::string::npos);
+}
 
 
 BOOST_AUTO_TEST_CASE(closed_filestream_exception) {
