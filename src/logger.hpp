@@ -1,3 +1,6 @@
+#ifndef SIMPLE_LOGGER_LOGGER_HPP
+#define SIMPLE_LOGGER_LOGGER_HPP
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -290,3 +293,5 @@ void fatalf(const std::string& fmt, Args&&... args) {
 }
 
 }
+
+#endif
