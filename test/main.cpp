@@ -1,4 +1,5 @@
 #include "../src/logger.hpp"
+#include "../src/format.hpp"
 
 #include <iostream>
 #include <stdexcept>
