@@ -279,5 +279,21 @@ BOOST_AUTO_TEST_CASE(formated_ints) {
 	BOOST_CHECK_EQUAL(to_string("03s"_fmt(13)), "013");
 }
 
+BOOST_AUTO_TEST_CASE(formated_ints_variadic_api) {
+	using logger::conv::to_string;
+	using logger::format::fmt;
+	BOOST_CHECK_EQUAL(to_string(fmt(3)), "3");
+	BOOST_CHECK_EQUAL(to_string(fmt(3, logger::format::width_t{3})), "  3");
+}
+
+BOOST_AUTO_TEST_CASE(formated_ints_variadic_api_literals) {
+	using logger::conv::to_string;
+	using logger::format::fmt;
+	using namespace logger::format::literals;
+	BOOST_CHECK_EQUAL(to_string(fmt(3)), "3");
+	BOOST_CHECK_EQUAL(to_string(fmt(3, 3_w)), "  3");
+	BOOST_CHECK_EQUAL(to_string(fmt(10, 3_w, 8_b, 'x'_f)), "x12");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
