@@ -3,7 +3,7 @@ simple_logger
 
 A simple, easily reviewable logging library.
 
-This library is developed for inclusion into [CAcerts Cassiopeia](https://github.com/CAcertOrg/cacert-cassiopeia)
+This library is developed for inclusion into [CAcert's Cassiopeia](https://github.com/CAcertOrg/cacert-cassiopeia)
 and therefore attempts to have very simple code implementing only things that are really needed, so
 that it can easily be reviewed.
 
