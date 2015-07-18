@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <initializer_list>
+#include <tuple>
 
 namespace logger {
 namespace format {
@@ -57,7 +58,7 @@ struct formated_integer : public format_data {
 
 struct formated_string : public format_data {
 	formated_string(const std::string& s, format_data f)
-	        : format_data(f), value{std::move(s)} {}
+	        : format_data(f), value(std::move(s)) {}
 	const std::string& value;
 };
 
