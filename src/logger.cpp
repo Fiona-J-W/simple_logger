@@ -132,6 +132,16 @@ void logger_set::log_impl(level l, const std::string& msg) {
 	}
 }
 
+logger_set current_logger_extended(std::initializer_list<log_target> further_targets) {
+	auto& active = impl::active_logger();
+	auto returnvalue = logger_set{further_targets};
+	for(const auto& target: active.m_loggers) {
+		returnvalue.m_loggers.emplace_back(target);
+	}
+	returnvalue.m_min_level = active.m_min_level;
+	return returnvalue;
+}
+
 namespace {
 
 std::string make_prefix(level l) {

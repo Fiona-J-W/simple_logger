@@ -252,6 +252,23 @@ BOOST_AUTO_TEST_CASE(multiple_calls_nested) {
 }
 
 
+BOOST_AUTO_TEST_CASE(extending_current_logger) {
+	auto stream1 = std::ostringstream{};
+	auto logger1 = logger::logger_set{stream1};
+	auto stream2 = std::ostringstream{};
+	{
+		auto logger2 = logger::current_logger_extended({stream2});
+		logger::note("foo1");
+	}
+	BOOST_CHECK(head_and_tail_equal(stream1.str(), "[note ][", "]: foo1\n"));
+	BOOST_CHECK(head_and_tail_equal(stream2.str(), "[note ][", "]: foo1\n"));
+	stream1.str("");
+	stream2.str("");
+	logger::note("foo2");
+	BOOST_CHECK(head_and_tail_equal(stream1.str(), "[note ][", "]: foo2\n"));
+	BOOST_CHECK(stream2.str().empty());
+}
+
 BOOST_AUTO_TEST_CASE(closed_filestream_exception) {
 	std::ofstream stream;
 	BOOST_CHECK_THROW(logger::logger_set{stream}, std::runtime_error);

@@ -96,6 +96,7 @@ public:
 	void fatalf(const std::string& format, Args&&... args);
 
 	friend void impl::reassign_stack_pointer(logger_set*& ptr);
+	friend logger_set current_logger_extended(std::initializer_list<log_target> further_targets);
 private:
 	void log_impl(level l, const std::string& msg);
 
@@ -104,6 +105,8 @@ private:
 	level m_min_level;
 };
 
+
+logger_set current_logger_extended(std::initializer_list<log_target> further_targets);
 
 namespace impl {
 	std::string concat_msg(level l, const std::vector<std::string>& args);
