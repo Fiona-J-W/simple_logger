@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 2.8)
 
 # Ok, so let's just hardcode all the flags instead:
 # TODO: make this portable
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++11" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -std=c++11" )
 
 # we want tests:
 enable_testing()

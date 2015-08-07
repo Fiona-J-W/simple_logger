@@ -19,8 +19,8 @@ struct width_t {
 	unsigned value = 0u;
 };
 struct base_t {
-	explicit base_t(unsigned v): value{v}{}
-	unsigned value = 10u;
+	explicit base_t(std::uint8_t v): value{v}{}
+	std::uint8_t value = 10u;
 };
 struct fill_t {
 	explicit fill_t(char v): value{v}{}
@@ -30,7 +30,7 @@ enum class align_t { left, right };
 
 inline namespace literals {
 inline width_t operator""_w(unsigned long long value) { return width_t{static_cast<unsigned>(value)}; }
-inline base_t operator""_b(unsigned long long value) { return base_t{static_cast<unsigned>(value)}; }
+inline base_t operator""_b(unsigned long long value) { return base_t{static_cast<std::uint8_t>(value)}; }
 inline fill_t operator""_f(char c) { return fill_t{c}; }
 }
 
@@ -94,7 +94,9 @@ namespace conv {
 template <typename Integer>
 inline std::string to_string(const format::formated_integer<Integer>& arg) {
 	std::ostringstream stream;
-	stream << std::setbase(arg.base) << std::setw(arg.width) << std::setfill(arg.fill)
+	stream << std::setbase(static_cast<int>(arg.base))
+	       << std::setw(static_cast<int>(arg.width))
+	       << std::setfill(arg.fill)
 	       << arg.value;
 	return stream.str();
 }

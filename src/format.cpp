@@ -24,7 +24,7 @@ format_data operator""_fmt(const char* it, std::size_t len) {
 	if (std::isdigit(*it)) {
 		const auto w_end = std::find_if_not(it, end,
 				[](char c){return std::isdigit(c);});
-		retval.width = std::stoul(std::string{it, w_end});
+		retval.width = static_cast<unsigned>(std::stoul(std::string{it, w_end}));
 		it = w_end;
 	}
 	if (it == end) {
